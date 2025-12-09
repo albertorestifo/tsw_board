@@ -1,6 +1,22 @@
 # TWS-IO Device Firmware
 
-Arduino firmware for the TWS-IO device - a configurable sensor input device that communicates over serial.
+Arduino firmware for the TWS-IO device - a configurable I/O device for train simulator cockpits that communicates over serial.
+
+## Roadmap
+
+### Inputs
+
+- [x] Dynamic configuration via serial
+- [x] Analog inputs (levers, rotary controls)
+- [ ] Switches (single and multi-position)
+- [ ] Button matrix
+
+### Outputs
+
+- [ ] LED outputs (indicator lights)
+- [ ] PWM outputs (dimmable lights, gauge needles)
+- [ ] Servo outputs (physical gauge needles)
+- [ ] 7-segment displays (speed/pressure readouts)
 
 ## Supported Boards
 
@@ -62,24 +78,6 @@ docs/          # Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - Code structure and data flow
 - [Protocol](docs/PROTOCOL.md) - Serial communication protocol specification
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Make your changes
-4. Run tests (`pio test -e native`)
-5. Build for at least one target (`pio run -e uno`)
-6. Commit your changes (`git commit -am 'Add my feature'`)
-7. Push to the branch (`git push origin feature/my-feature`)
-8. Open a Pull Request
-
-### Code Style
-
-- Use consistent indentation (4 spaces)
-- Keep functions focused and small
-- Add tests for new protocol messages
-- Update documentation for user-facing changes
 
 ## License
 
