@@ -39,8 +39,14 @@ All messages start with a 1-byte message type.
 ### IdentityResponse (1)
 
 ```
-[type: u8 = 1] [request_id: u32] [version: u8] [device_id: u8] [config_id: u32]
+[type: u8 = 1] [request_id: u32] [version_major: u8] [version_minor: u8] [version_patch: u8] [config_id: u32]
 ```
+
+| Field | Description |
+|-------|-------------|
+| version_major | Major version number (semantic versioning) |
+| version_minor | Minor version number (semantic versioning) |
+| version_patch | Patch version number (semantic versioning) |
 
 ### Configure (2)
 

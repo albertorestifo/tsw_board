@@ -65,46 +65,51 @@ void test_identity_response_encode()
 {
     IdentityResponse response;
     response.request_id = 0xAABBCCDD;
-    response.version = 1;
-    response.device_id = 0x01;
+    response.version_major = 1;
+    response.version_minor = 2;
+    response.version_patch = 3;
     response.config_id = 0x12345678;
 
     uint8_t buffer[64];
     size_t size = response.encode(buffer, sizeof(buffer));
 
-    TEST_ASSERT_EQUAL(11, size);
+    // 1 type + 4 request_id + 1 version_major + 1 version_minor + 1 version_patch + 4 config_id = 12
+    TEST_ASSERT_EQUAL(12, size);
     TEST_ASSERT_EQUAL_UINT8(MESSAGE_TYPE_IDENTITY_RESPONSE, buffer[0]);
     TEST_ASSERT_EQUAL_UINT8(0xDD, buffer[1]); // request_id byte 0 (LE)
     TEST_ASSERT_EQUAL_UINT8(0xCC, buffer[2]); // request_id byte 1 (LE)
     TEST_ASSERT_EQUAL_UINT8(0xBB, buffer[3]); // request_id byte 2 (LE)
     TEST_ASSERT_EQUAL_UINT8(0xAA, buffer[4]); // request_id byte 3 (LE)
-    TEST_ASSERT_EQUAL_UINT8(0x01, buffer[5]); // version
-    TEST_ASSERT_EQUAL_UINT8(0x01, buffer[6]); // device_id
-    TEST_ASSERT_EQUAL_UINT8(0x78, buffer[7]); // config_id byte 0 (LE)
-    TEST_ASSERT_EQUAL_UINT8(0x56, buffer[8]); // config_id byte 1 (LE)
-    TEST_ASSERT_EQUAL_UINT8(0x34, buffer[9]); // config_id byte 2 (LE)
-    TEST_ASSERT_EQUAL_UINT8(0x12, buffer[10]); // config_id byte 3 (LE)
+    TEST_ASSERT_EQUAL_UINT8(1, buffer[5]); // version_major
+    TEST_ASSERT_EQUAL_UINT8(2, buffer[6]); // version_minor
+    TEST_ASSERT_EQUAL_UINT8(3, buffer[7]); // version_patch
+    TEST_ASSERT_EQUAL_UINT8(0x78, buffer[8]); // config_id byte 0 (LE)
+    TEST_ASSERT_EQUAL_UINT8(0x56, buffer[9]); // config_id byte 1 (LE)
+    TEST_ASSERT_EQUAL_UINT8(0x34, buffer[10]); // config_id byte 2 (LE)
+    TEST_ASSERT_EQUAL_UINT8(0x12, buffer[11]); // config_id byte 3 (LE)
 }
 
 // Test IdentityResponse decoding
 void test_identity_response_decode()
 {
-    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB, 0xAA, 0x01, 0x01, 0x78, 0x56, 0x34, 0x12 };
+    // type + request_id (LE) + version_major + version_minor + version_patch + config_id (LE)
+    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB, 0xAA, 0x01, 0x02, 0x03, 0x78, 0x56, 0x34, 0x12 };
 
     IdentityResponse response;
     bool result = response.decode(buffer, sizeof(buffer));
 
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL_UINT32(0xAABBCCDD, response.request_id);
-    TEST_ASSERT_EQUAL_UINT8(1, response.version);
-    TEST_ASSERT_EQUAL_UINT8(0x01, response.device_id);
+    TEST_ASSERT_EQUAL_UINT8(1, response.version_major);
+    TEST_ASSERT_EQUAL_UINT8(2, response.version_minor);
+    TEST_ASSERT_EQUAL_UINT8(3, response.version_patch);
     TEST_ASSERT_EQUAL_UINT32(0x12345678, response.config_id);
 }
 
 // Test IdentityResponse decode with insufficient data
 void test_identity_response_decode_insufficient_data()
 {
-    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB }; // Only 4 bytes, need 11
+    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB }; // Only 4 bytes, need 12
 
     IdentityResponse response;
     bool result = response.decode(buffer, sizeof(buffer));
@@ -117,8 +122,9 @@ void test_identity_response_roundtrip()
 {
     IdentityResponse original;
     original.request_id = 0xDEADBEEF;
-    original.version = 5;
-    original.device_id = 0xAB;
+    original.version_major = 2;
+    original.version_minor = 1;
+    original.version_patch = 3;
     original.config_id = 0xCAFEBABE;
 
     uint8_t buffer[64];
@@ -129,8 +135,9 @@ void test_identity_response_roundtrip()
 
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL_UINT32(original.request_id, decoded.request_id);
-    TEST_ASSERT_EQUAL_UINT8(original.version, decoded.version);
-    TEST_ASSERT_EQUAL_UINT8(original.device_id, decoded.device_id);
+    TEST_ASSERT_EQUAL_UINT8(original.version_major, decoded.version_major);
+    TEST_ASSERT_EQUAL_UINT8(original.version_minor, decoded.version_minor);
+    TEST_ASSERT_EQUAL_UINT8(original.version_patch, decoded.version_patch);
     TEST_ASSERT_EQUAL_UINT32(original.config_id, decoded.config_id);
 }
 
@@ -150,7 +157,8 @@ void test_message_decode_identity_request()
 // Test Message decode for IdentityResponse
 void test_message_decode_identity_response()
 {
-    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB, 0xAA, 0x01, 0x01, 0x78, 0x56, 0x34, 0x12 };
+    // type + request_id (LE) + version_major + version_minor + version_patch + config_id (LE)
+    uint8_t buffer[] = { MESSAGE_TYPE_IDENTITY_RESPONSE, 0xDD, 0xCC, 0xBB, 0xAA, 0x01, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12 };
 
     Message msg;
     bool result = msg.decode(buffer, sizeof(buffer));
@@ -158,8 +166,9 @@ void test_message_decode_identity_response()
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_TRUE(msg.isIdentityResponse());
     TEST_ASSERT_EQUAL_UINT32(0xAABBCCDD, msg.identity_response.request_id);
-    TEST_ASSERT_EQUAL_UINT8(1, msg.identity_response.version);
-    TEST_ASSERT_EQUAL_UINT8(0x01, msg.identity_response.device_id);
+    TEST_ASSERT_EQUAL_UINT8(1, msg.identity_response.version_major);
+    TEST_ASSERT_EQUAL_UINT8(0, msg.identity_response.version_minor);
+    TEST_ASSERT_EQUAL_UINT8(0, msg.identity_response.version_patch);
     TEST_ASSERT_EQUAL_UINT32(0x12345678, msg.identity_response.config_id);
 }
 

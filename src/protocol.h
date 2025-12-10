@@ -34,8 +34,9 @@ struct IdentityRequest {
 // Identity Response message
 struct IdentityResponse {
     uint32_t request_id;
-    uint8_t version;
-    uint8_t device_id;
+    uint8_t version_major;
+    uint8_t version_minor;
+    uint8_t version_patch;
     uint32_t config_id;
 
     // Encode to buffer (returns number of bytes written, 0 on error)

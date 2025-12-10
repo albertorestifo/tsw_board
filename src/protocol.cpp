@@ -51,7 +51,8 @@ bool IdentityRequest::decode(const uint8_t* buffer, size_t length)
 
 size_t IdentityResponse::encode(uint8_t* buffer, size_t buffer_size) const
 {
-    constexpr size_t REQUIRED_SIZE = 11; // 1 type + 4 request_id + 1 version + 1 device_id + 4 config_id
+    // 1 type + 4 request_id + 1 version_major + 1 version_minor + 1 version_patch + 4 config_id = 12
+    constexpr size_t REQUIRED_SIZE = 12;
 
     if (buffer_size < REQUIRED_SIZE) {
         return 0; // Buffer too small
@@ -68,11 +69,14 @@ size_t IdentityResponse::encode(uint8_t* buffer, size_t buffer_size) const
     buffer[offset++] = (request_id >> 16) & 0xFF;
     buffer[offset++] = (request_id >> 24) & 0xFF;
 
-    // version (u8)
-    buffer[offset++] = version;
+    // version_major (u8)
+    buffer[offset++] = version_major;
 
-    // device_id (u8)
-    buffer[offset++] = device_id;
+    // version_minor (u8)
+    buffer[offset++] = version_minor;
+
+    // version_patch (u8)
+    buffer[offset++] = version_patch;
 
     // config_id (u32) - little endian
     buffer[offset++] = (config_id >> 0) & 0xFF;
@@ -85,7 +89,7 @@ size_t IdentityResponse::encode(uint8_t* buffer, size_t buffer_size) const
 
 bool IdentityResponse::decode(const uint8_t* buffer, size_t length)
 {
-    constexpr size_t REQUIRED_SIZE = 11;
+    constexpr size_t REQUIRED_SIZE = 12;
 
     if (length < REQUIRED_SIZE) {
         return false; // Not enough data
@@ -101,11 +105,14 @@ bool IdentityResponse::decode(const uint8_t* buffer, size_t length)
     request_id = ((uint32_t)buffer[offset + 0] << 0) | ((uint32_t)buffer[offset + 1] << 8) | ((uint32_t)buffer[offset + 2] << 16) | ((uint32_t)buffer[offset + 3] << 24);
     offset += 4;
 
-    // version (u8)
-    version = buffer[offset++];
+    // version_major (u8)
+    version_major = buffer[offset++];
 
-    // device_id (u8)
-    device_id = buffer[offset++];
+    // version_minor (u8)
+    version_minor = buffer[offset++];
+
+    // version_patch (u8)
+    version_patch = buffer[offset++];
 
     // config_id (u32) - little endian
     config_id = ((uint32_t)buffer[offset + 0] << 0) | ((uint32_t)buffer[offset + 1] << 8) | ((uint32_t)buffer[offset + 2] << 16) | ((uint32_t)buffer[offset + 3] << 24);

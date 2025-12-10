@@ -63,10 +63,10 @@ void test_store_writes_version()
     EEPROM.get(ConfigManager::EEPROM_MAGIC_ADDR, magic);
     TEST_ASSERT_EQUAL_UINT32(ConfigManager::EEPROM_MAGIC, magic);
 
-    // Verify version
+    // Verify EEPROM format version
     uint8_t version;
     EEPROM.get(ConfigManager::EEPROM_VERSION_ADDR, version);
-    TEST_ASSERT_EQUAL_UINT8(DEVICE_VERSION, version);
+    TEST_ASSERT_EQUAL_UINT8(EEPROM_FORMAT_VERSION, version);
 
     // Verify config_id
     uint32_t stored_config_id;
@@ -112,7 +112,7 @@ void test_load_fails_with_mismatched_version()
 {
     // Manually write EEPROM with wrong version
     EEPROM.put(ConfigManager::EEPROM_MAGIC_ADDR, ConfigManager::EEPROM_MAGIC);
-    uint8_t wrong_version = DEVICE_VERSION + 1;
+    uint8_t wrong_version = EEPROM_FORMAT_VERSION + 1;
     EEPROM.put(ConfigManager::EEPROM_VERSION_ADDR, wrong_version);
     uint32_t config_id = 99999;
     EEPROM.put(ConfigManager::EEPROM_CONFIG_ID_ADDR, config_id);
@@ -142,7 +142,7 @@ void test_load_fails_with_invalid_num_inputs()
 {
     // Write valid magic and version but invalid num_inputs
     EEPROM.put(ConfigManager::EEPROM_MAGIC_ADDR, ConfigManager::EEPROM_MAGIC);
-    EEPROM.put(ConfigManager::EEPROM_VERSION_ADDR, DEVICE_VERSION);
+    EEPROM.put(ConfigManager::EEPROM_VERSION_ADDR, EEPROM_FORMAT_VERSION);
     uint32_t config_id = 12345;
     EEPROM.put(ConfigManager::EEPROM_CONFIG_ID_ADDR, config_id);
     uint8_t num_inputs = 0; // Invalid: 0 inputs

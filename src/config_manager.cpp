@@ -95,8 +95,8 @@ void storeToEEPROM(uint32_t config_id, const InputConfig* inputs, uint8_t num_in
     // Write magic number
     EEPROM.put(EEPROM_MAGIC_ADDR, EEPROM_MAGIC);
 
-    // Write device version (for compatibility checking)
-    EEPROM.put(EEPROM_VERSION_ADDR, DEVICE_VERSION);
+    // Write EEPROM format version (for compatibility checking)
+    EEPROM.put(EEPROM_VERSION_ADDR, EEPROM_FORMAT_VERSION);
 
     // Write config_id
     EEPROM.put(EEPROM_CONFIG_ID_ADDR, config_id);
@@ -125,10 +125,10 @@ bool loadFromEEPROM()
         return false; // No valid configuration
     }
 
-    // Read and verify device version
+    // Read and verify EEPROM format version
     uint8_t stored_version;
     EEPROM.get(EEPROM_VERSION_ADDR, stored_version);
-    if (stored_version != DEVICE_VERSION) {
+    if (stored_version != EEPROM_FORMAT_VERSION) {
         // Version mismatch - clear EEPROM to invalidate old config
         // This prevents loading incompatible configurations after firmware updates
         uint32_t zero = 0;

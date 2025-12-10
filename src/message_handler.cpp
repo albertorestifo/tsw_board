@@ -106,8 +106,9 @@ void sendIdentityResponse(uint32_t request_id, uint32_t config_id)
 {
     Protocol::IdentityResponse response;
     response.request_id = request_id;
-    response.version = DEVICE_VERSION;
-    response.device_id = DEVICE_ID;
+    response.version_major = DEVICE_VERSION_MAJOR;
+    response.version_minor = DEVICE_VERSION_MINOR;
+    response.version_patch = DEVICE_VERSION_PATCH;
     response.config_id = config_id;
 
     sendMessage(response);
