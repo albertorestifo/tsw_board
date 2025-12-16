@@ -8,12 +8,12 @@ Arduino firmware for the TSW-IO device - a configurable I/O device for train sim
 
 - [x] Dynamic configuration via serial
 - [x] Analog inputs (levers, rotary controls)
-- [ ] Switches (single and multi-position)
-- [ ] Button matrix
+- [x] Switches (single and multi-position)
+- [x] Button matrix
 
 ### Outputs
 
-- [ ] LED outputs (indicator lights)
+- [x] LED outputs (indicator lights)
 - [ ] PWM outputs (dimmable lights, gauge needles)
 - [ ] Servo outputs (physical gauge needles)
 - [ ] 7-segment displays (speed/pressure readouts)
