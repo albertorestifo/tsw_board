@@ -13,6 +13,7 @@ constexpr uint8_t MESSAGE_TYPE_CONFIGURATION_STORED = 3;
 constexpr uint8_t MESSAGE_TYPE_CONFIGURATION_ERROR = 4;
 constexpr uint8_t MESSAGE_TYPE_INPUT_VALUE = 5;
 constexpr uint8_t MESSAGE_TYPE_HEARTBEAT = 6;
+constexpr uint8_t MESSAGE_TYPE_SET_OUTPUT = 7;
 
 // Input Type constants for Configure message
 constexpr uint8_t INPUT_TYPE_ANALOG = 0;
@@ -141,6 +142,18 @@ struct Heartbeat {
     bool decode(const uint8_t* buffer, size_t length);
 };
 
+// SetOutput message - sent by host to control an output pin
+struct SetOutput {
+    uint8_t pin;
+    uint8_t value; // 0 = OFF (LOW), 1 = ON (HIGH)
+
+    // Encode to buffer (returns number of bytes written, 0 on error)
+    size_t encode(uint8_t* buffer, size_t buffer_size) const;
+
+    // Decode from buffer (returns true on success)
+    bool decode(const uint8_t* buffer, size_t length);
+};
+
 // Generic message union for decoding
 struct Message {
     uint8_t message_type;
@@ -153,6 +166,7 @@ struct Message {
         ConfigurationError configuration_error;
         InputValue input_value;
         Heartbeat heartbeat;
+        SetOutput set_output;
     };
 
     Message()
@@ -185,6 +199,9 @@ struct Message {
 
     // Check if this is a Heartbeat message
     bool isHeartbeat() const { return message_type == MESSAGE_TYPE_HEARTBEAT; }
+
+    // Check if this is a SetOutput message
+    bool isSetOutput() const { return message_type == MESSAGE_TYPE_SET_OUTPUT; }
 };
 
 } // namespace Protocol

@@ -1,6 +1,7 @@
 #include "message_handler.h"
 #include "config_manager.h"
 #include "heartbeat.h"
+#include "output_manager.h"
 #include "sensor_manager.h"
 
 namespace MessageHandler {
@@ -54,6 +55,8 @@ void onPacketReceived(const uint8_t* buffer, size_t size)
         handleIdentityRequest(msg.identity_request.request_id);
     } else if (msg.isConfigure()) {
         handleConfigure(msg.configure);
+    } else if (msg.isSetOutput()) {
+        handleSetOutput(msg.set_output);
     }
 }
 
@@ -100,6 +103,11 @@ void handleConfigure(const Protocol::Configure& cfg)
     } else if (error) {
         sendConfigurationError(cfg.config_id);
     }
+}
+
+void handleSetOutput(const Protocol::SetOutput& cmd)
+{
+    OutputManager::setOutput(cmd.pin, cmd.value);
 }
 
 void sendIdentityResponse(uint32_t request_id, uint32_t config_id)

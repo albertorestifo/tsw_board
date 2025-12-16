@@ -659,6 +659,67 @@ void test_message_decode_configuration_error()
     TEST_ASSERT_EQUAL(0xDEADBEEF, msg.configuration_error.config_id);
 }
 
+// SetOutput tests
+
+void test_set_output_encode()
+{
+    SetOutput cmd;
+    cmd.pin = 13;
+    cmd.value = 1;
+
+    uint8_t buffer[16];
+    size_t size = cmd.encode(buffer, sizeof(buffer));
+
+    TEST_ASSERT_EQUAL(3, size);
+    TEST_ASSERT_EQUAL_UINT8(MESSAGE_TYPE_SET_OUTPUT, buffer[0]);
+    TEST_ASSERT_EQUAL_UINT8(13, buffer[1]);
+    TEST_ASSERT_EQUAL_UINT8(1, buffer[2]);
+}
+
+void test_set_output_decode()
+{
+    uint8_t buffer[] = { MESSAGE_TYPE_SET_OUTPUT, 5, 0 };
+
+    SetOutput cmd;
+    TEST_ASSERT_TRUE(cmd.decode(buffer, sizeof(buffer)));
+    TEST_ASSERT_EQUAL_UINT8(5, cmd.pin);
+    TEST_ASSERT_EQUAL_UINT8(0, cmd.value);
+}
+
+void test_set_output_roundtrip()
+{
+    SetOutput original;
+    original.pin = 9;
+    original.value = 1;
+
+    uint8_t buffer[16];
+    size_t size = original.encode(buffer, sizeof(buffer));
+
+    SetOutput decoded;
+    TEST_ASSERT_TRUE(decoded.decode(buffer, size));
+    TEST_ASSERT_EQUAL_UINT8(original.pin, decoded.pin);
+    TEST_ASSERT_EQUAL_UINT8(original.value, decoded.value);
+}
+
+void test_set_output_decode_insufficient_data()
+{
+    uint8_t buffer[] = { MESSAGE_TYPE_SET_OUTPUT, 5 }; // Missing value byte
+
+    SetOutput cmd;
+    TEST_ASSERT_FALSE(cmd.decode(buffer, sizeof(buffer)));
+}
+
+void test_message_decode_set_output()
+{
+    uint8_t buffer[] = { MESSAGE_TYPE_SET_OUTPUT, 13, 1 };
+
+    Message msg;
+    TEST_ASSERT_TRUE(msg.decode(buffer, sizeof(buffer)));
+    TEST_ASSERT_TRUE(msg.isSetOutput());
+    TEST_ASSERT_EQUAL_UINT8(13, msg.set_output.pin);
+    TEST_ASSERT_EQUAL_UINT8(1, msg.set_output.value);
+}
+
 // Main test runner
 void setUp(void)
 {
@@ -715,6 +776,12 @@ int main(int argc, char** argv)
     RUN_TEST(test_configuration_error_decode);
     RUN_TEST(test_configuration_error_roundtrip);
 
+    // SetOutput tests
+    RUN_TEST(test_set_output_encode);
+    RUN_TEST(test_set_output_decode);
+    RUN_TEST(test_set_output_roundtrip);
+    RUN_TEST(test_set_output_decode_insufficient_data);
+
     // Message union tests
     RUN_TEST(test_message_decode_identity_request);
     RUN_TEST(test_message_decode_identity_response);
@@ -723,6 +790,7 @@ int main(int argc, char** argv)
     RUN_TEST(test_message_decode_configure_matrix);
     RUN_TEST(test_message_decode_configuration_stored);
     RUN_TEST(test_message_decode_configuration_error);
+    RUN_TEST(test_message_decode_set_output);
     RUN_TEST(test_message_decode_invalid_type);
 
     // Error handling tests

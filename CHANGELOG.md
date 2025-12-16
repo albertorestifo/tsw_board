@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `INPUT_TYPE_BUTTON = 1`
   - `INPUT_TYPE_MATRIX = 2`
 
+- **LED output support**: Control output pins directly from host
+  - New `SetOutput` message (type 7): `[type: u8 = 7] [pin: u8] [value: u8]`
+  - Fire-and-forget (no acknowledgment) for low latency
+  - Automatic pinMode configuration on first use
+  - No configuration required - device acts as "dumb" output controller
+
 ### Changed
 
 - **BREAKING**: `Configure` message format changed to discriminated union
@@ -54,6 +60,7 @@ Hosts must update their protocol implementation to:
 1. Include `input_type` field in Configure messages
 2. Handle type-specific payloads for analog, button, and matrix inputs
 3. Use virtual pins (128+) when receiving InputValue from matrix buttons
+4. (Optional) Use new `SetOutput` message to control output pins
 
 ## [1.0.1] - 2025-12-10
 

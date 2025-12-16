@@ -431,6 +431,53 @@ bool Heartbeat::decode(const uint8_t* buffer, size_t length)
     return true;
 }
 
+// SetOutput implementation
+
+size_t SetOutput::encode(uint8_t* buffer, size_t buffer_size) const
+{
+    constexpr size_t REQUIRED_SIZE = 3; // 1 type + 1 pin + 1 value
+
+    if (buffer_size < REQUIRED_SIZE) {
+        return 0; // Buffer too small
+    }
+
+    size_t offset = 0;
+
+    // Message type (u8)
+    buffer[offset++] = MESSAGE_TYPE_SET_OUTPUT;
+
+    // pin (u8)
+    buffer[offset++] = pin;
+
+    // value (u8)
+    buffer[offset++] = value;
+
+    return offset;
+}
+
+bool SetOutput::decode(const uint8_t* buffer, size_t length)
+{
+    constexpr size_t REQUIRED_SIZE = 3;
+
+    if (length < REQUIRED_SIZE) {
+        return false; // Not enough data
+    }
+
+    if (buffer[0] != MESSAGE_TYPE_SET_OUTPUT) {
+        return false; // Wrong message type
+    }
+
+    size_t offset = 1;
+
+    // pin (u8)
+    pin = buffer[offset++];
+
+    // value (u8)
+    value = buffer[offset++];
+
+    return true;
+}
+
 // Message implementation (for generic decoding)
 
 bool Message::decode(const uint8_t* buffer, size_t length)
@@ -462,6 +509,9 @@ bool Message::decode(const uint8_t* buffer, size_t length)
 
     case MESSAGE_TYPE_HEARTBEAT:
         return heartbeat.decode(buffer, length);
+
+    case MESSAGE_TYPE_SET_OUTPUT:
+        return set_output.decode(buffer, length);
 
     default:
         return false; // Unknown message type

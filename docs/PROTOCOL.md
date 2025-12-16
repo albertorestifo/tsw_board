@@ -27,6 +27,7 @@ All messages start with a 1-byte message type.
 | ConfigurationError | 4 | Device → Host | Configuration failed |
 | InputValue | 5 | Device → Host | Sensor reading |
 | Heartbeat | 6 | Device → Host | Keep-alive |
+| SetOutput | 7 | Host → Device | Control an output pin |
 
 ## Message Definitions
 
@@ -130,6 +131,19 @@ Value is the raw ADC reading (0-1023 for 10-bit ADC).
 ```
 
 Sent periodically to indicate device is alive.
+
+### SetOutput (7)
+
+```
+[type: u8 = 7] [pin: u8] [value: u8]
+```
+
+| Field | Description |
+|-------|-------------|
+| pin | Output pin number |
+| value | 0 = OFF (LOW), 1 = ON (HIGH) |
+
+Controls an output pin directly. The device automatically configures the pin as OUTPUT on first use. No acknowledgment is sent (fire-and-forget for low latency).
 
 ## Configuration Sequence
 

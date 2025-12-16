@@ -23,6 +23,7 @@ void update();
 // Message handlers for specific message types
 void handleIdentityRequest(uint32_t request_id);
 void handleConfigure(const Protocol::Configure& cfg);
+void handleSetOutput(const Protocol::SetOutput& cmd);
 
 // Internal helper - sends a message and notifies heartbeat manager
 // Template function to handle any protocol message type

@@ -1,5 +1,6 @@
 #include "config_manager.h"
 #include "message_handler.h"
+#include "output_manager.h"
 #include "sensor_manager.h"
 #include <Arduino.h>
 #include <PacketSerial.h>
@@ -19,6 +20,7 @@ void setup()
     // Initialize subsystems
     ConfigManager::init();
     SensorManager::init();
+    OutputManager::init();
     MessageHandler::init(&g_packet_serial);
 
     // Apply loaded configuration to sensors
