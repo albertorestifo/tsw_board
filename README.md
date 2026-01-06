@@ -1,6 +1,6 @@
-# TSW-IO Device Firmware
+# Trenino Firmware
 
-Arduino firmware for the TSW-IO device - a configurable I/O device for train simulator cockpits that communicates over serial.
+Arduino firmware for Trenino - a configurable I/O device for train simulator cockpits that communicates over serial.
 
 ## Roadmap
 
@@ -37,7 +37,7 @@ Arduino firmware for the TSW-IO device - a configurable I/O device for train sim
 1. Download the `.hex` file for your board from the [Releases](../../releases) page
 2. Flash using avrdude or your preferred tool:
    ```bash
-   avrdude -p atmega32u4 -c avr109 -P /dev/ttyACM0 -U flash:w:tsw-io-sparkfun-pro-micro.hex:i
+   avrdude -p atmega32u4 -c avr109 -P /dev/ttyACM0 -U flash:w:trenino-sparkfun-pro-micro.hex:i
    ```
    Or use the Arduino IDE: **Sketch → Upload Using Programmer**
 

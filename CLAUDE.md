@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Arduino firmware for the TSW-IO device, targeting multiple Arduino-compatible boards. Uses PlatformIO for build management.
+Arduino firmware for Trenino, targeting multiple Arduino-compatible boards. Uses PlatformIO for build management.
 
 ## Build Commands
 
