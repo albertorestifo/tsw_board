@@ -14,8 +14,9 @@ AnalogSensor::AnalogSensor(uint8_t pin_number, uint8_t sensitivity_level)
 
 void AnalogSensor::begin()
 {
-    // Configure pin as input
-    pinMode(pin, INPUT);
+    // No pinMode needed for analog inputs - analogRead() handles pin configuration.
+    // Calling pinMode(channel, INPUT) with a channel number (0, 1, etc.) would
+    // incorrectly configure the wrong digital pin (e.g., RX/TX on Nano).
 
     // Reset state
     current_value = 0;
