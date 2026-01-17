@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-01-17
+
+### Added
+
+- **Arduino Due support**: Added `due` environment for ARM Cortex-M3 based Arduino Due
+  - Uses Preferences library for configuration storage instead of EEPROM
+  - Cross-platform configuration manager abstraction
+
+- **ESP32 support**: Added `esp32dev` environment for ESP32-based boards
+  - Uses Preferences library for configuration storage
+  - Supports ESP32 DevKit and compatible boards
+
+- **Release manifest**: Automated generation of `release.json` during GitHub releases
+  - Contains firmware metadata for all supported boards
+  - Includes download URLs, checksums, and board specifications
+  - Documented in docs/RELEASE_MANIFEST.md
+
+### Changed
+
+- **Configuration storage**: Refactored `ConfigManager` to support multiple storage backends
+  - AVR boards (Uno, Nano, Mega, Pro Micro, Leonardo, Micro) continue using EEPROM
+  - ARM/ESP32 boards (Due, ESP32) use Preferences library
+  - Transparent abstraction layer maintains compatibility
+
+- **CI/CD**: Updated workflows to build for all supported platforms including Due and ESP32
+
+### Removed
+
+- **Old bootloader Nano**: Removed `nanoatmega328` environment (old bootloader variant)
+  - Use `nanoatmega328new` instead for Arduino Nano boards
+
 ## [2.1.0] - 2026-01-07
 
 ### Fixed
