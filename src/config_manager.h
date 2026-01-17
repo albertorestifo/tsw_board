@@ -2,8 +2,20 @@
 
 #include "protocol.h"
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <stdint.h>
+
+// Platform-specific EEPROM handling
+#if defined(ESP32_PLATFORM) || defined(ESP32) || defined(ESP8266)
+#include <EEPROM.h>
+#define EEPROM_NEEDS_BEGIN
+#define EEPROM_NEEDS_COMMIT
+#define EEPROM_SIZE 512
+#elif defined(EEPROM_EMULATION) || defined(ARDUINO_SAM_DUE)
+#include <DueFlashStorage.h>
+#define EEPROM_USE_DUE_FLASH
+#else
+#include <EEPROM.h>
+#endif
 
 namespace ConfigManager {
 

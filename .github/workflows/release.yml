@@ -13,18 +13,36 @@ jobs:
         include:
           - environment: sparkfun_promicro16
             name: sparkfun-pro-micro
+            display_name: SparkFun Pro Micro
+            extension: hex
           - environment: leonardo
             name: arduino-leonardo
+            display_name: Arduino Leonardo
+            extension: hex
           - environment: micro
             name: arduino-micro
+            display_name: Arduino Micro
+            extension: hex
           - environment: uno
             name: arduino-uno
-          - environment: nanoatmega328
-            name: arduino-nano-old-bootloader
+            display_name: Arduino Uno
+            extension: hex
           - environment: nanoatmega328new
             name: arduino-nano
+            display_name: Arduino Nano
+            extension: hex
           - environment: megaatmega2560
             name: arduino-mega-2560
+            display_name: Arduino Mega 2560
+            extension: hex
+          - environment: due
+            name: arduino-due
+            display_name: Arduino Due
+            extension: bin
+          - environment: esp32dev
+            name: esp32
+            display_name: ESP32 DevKit
+            extension: bin
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +60,16 @@ jobs:
       - name: Rename firmware
         run: |
           mkdir -p release
-          cp .pio/build/${{ matrix.environment }}/firmware.hex release/tws-io-${{ matrix.name }}.hex
+          cp .pio/build/${{ matrix.environment }}/firmware.${{ matrix.extension }} release/trenino-${{ matrix.name }}.firmware.${{ matrix.extension }}
+
+      - name: Create device info JSON
+        run: |
+          printf '{\n  "environment": "%s",\n  "name": "%s",\n  "displayName": "%s",\n  "firmwareFile": "%s"\n}\n' \
+            "${{ matrix.environment }}" \
+            "${{ matrix.name }}" \
+            "${{ matrix.display_name }}" \
+            "trenino-${{ matrix.name }}.firmware.${{ matrix.extension }}" \
+            > release/${{ matrix.name }}.json
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -56,6 +83,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -63,8 +92,43 @@ jobs:
           pattern: firmware-*
           merge-multiple: true
 
+      - name: Generate release manifest
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          RELEASE_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          # Start the manifest
+          printf '{\n  "version": "%s",\n  "releaseDate": "%s",\n  "project": "trenino",\n  "devices": [\n' \
+            "$VERSION" "$RELEASE_DATE" > firmware/release.json
+
+          # Add each device info to the manifest
+          first=true
+          for device_json in firmware/*.json; do
+            if [ -f "$device_json" ] && [ "$(basename "$device_json")" != "release.json" ]; then
+              if [ "$first" = true ]; then
+                first=false
+              else
+                printf ',\n' >> firmware/release.json
+              fi
+              # Read the device JSON and indent it
+              sed 's/^/    /' "$device_json" >> firmware/release.json
+            fi
+          done
+
+          # Close the manifest
+          printf '\n  ]\n}\n' >> firmware/release.json
+
+          # Remove individual device JSON files (keep only release.json)
+          find firmware -name "*.json" ! -name "release.json" -delete
+
+          # Display the manifest for debugging
+          cat firmware/release.json
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: firmware/*.hex
+          files: |
+            firmware/*.hex
+            firmware/*.bin
+            firmware/release.json
           generate_release_notes: true

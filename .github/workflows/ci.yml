@@ -32,9 +32,10 @@ jobs:
           - leonardo
           - micro
           - uno
-          - nanoatmega328
           - nanoatmega328new
           - megaatmega2560
+          - due
+          - esp32dev
     steps:
       - uses: actions/checkout@v4
 

@@ -33,8 +33,10 @@ pio test -e native -f test_protocol
 - `leonardo` - Arduino Leonardo
 - `micro` - Arduino Micro
 - `uno` - Arduino Uno
-- `nanoatmega328` / `nanoatmega328new` - Arduino Nano
+- `nanoatmega328new` - Arduino Nano
 - `megaatmega2560` - Arduino Mega 2560
+- `due` - Arduino Due
+- `esp32dev` - ESP32 DevKit
 - `native` - Unit testing
 
 ## Architecture

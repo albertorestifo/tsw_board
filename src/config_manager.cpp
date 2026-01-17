@@ -1,6 +1,49 @@
 #include "config_manager.h"
 #include "device_info.h"
 
+// Platform-specific EEPROM instance for Arduino Due
+#ifdef EEPROM_USE_DUE_FLASH
+DueFlashStorage dueFlashStorage;
+#endif
+
+// Platform-agnostic EEPROM access helpers
+namespace {
+
+template <typename T>
+void eeprom_put(int address, const T& value)
+{
+#ifdef EEPROM_USE_DUE_FLASH
+    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&value);
+    for (size_t i = 0; i < sizeof(T); i++) {
+        dueFlashStorage.write(address + i, ptr[i]);
+    }
+#else
+    EEPROM.put(address, value);
+#endif
+}
+
+template <typename T>
+void eeprom_get(int address, T& value)
+{
+#ifdef EEPROM_USE_DUE_FLASH
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(&value);
+    for (size_t i = 0; i < sizeof(T); i++) {
+        ptr[i] = dueFlashStorage.read(address + i);
+    }
+#else
+    EEPROM.get(address, value);
+#endif
+}
+
+void eeprom_commit()
+{
+#ifdef EEPROM_NEEDS_COMMIT
+    EEPROM.commit();
+#endif
+}
+
+} // anonymous namespace
+
 namespace ConfigManager {
 
 // Global state
@@ -11,6 +54,11 @@ static uint8_t g_current_num_inputs = 0;
 
 void init()
 {
+#ifdef EEPROM_NEEDS_BEGIN
+    // ESP32 requires explicit EEPROM initialization
+    EEPROM.begin(EEPROM_SIZE);
+#endif
+
     // Try to load configuration from EEPROM
     if (loadFromEEPROM()) {
         // Configuration loaded successfully
@@ -93,80 +141,84 @@ void storeToEEPROM(uint32_t config_id, const InputConfig* inputs, uint8_t num_in
     int addr = 0;
 
     // Write magic number
-    EEPROM.put(EEPROM_MAGIC_ADDR, EEPROM_MAGIC);
+    eeprom_put(EEPROM_MAGIC_ADDR, EEPROM_MAGIC);
 
     // Write EEPROM format version (for compatibility checking)
-    EEPROM.put(EEPROM_VERSION_ADDR, EEPROM_FORMAT_VERSION);
+    eeprom_put(EEPROM_VERSION_ADDR, EEPROM_FORMAT_VERSION);
 
     // Write config_id
-    EEPROM.put(EEPROM_CONFIG_ID_ADDR, config_id);
+    eeprom_put(EEPROM_CONFIG_ID_ADDR, config_id);
 
     // Write number of inputs
-    EEPROM.put(EEPROM_NUM_INPUTS_ADDR, num_inputs);
+    eeprom_put(EEPROM_NUM_INPUTS_ADDR, num_inputs);
 
     // Write input configurations (variable size based on type)
     addr = EEPROM_INPUTS_ADDR;
     for (uint8_t i = 0; i < num_inputs; i++) {
         // Write input type
-        EEPROM.put(addr, inputs[i].input_type);
+        eeprom_put(addr, inputs[i].input_type);
         addr += sizeof(uint8_t);
 
         switch (inputs[i].input_type) {
         case Protocol::INPUT_TYPE_ANALOG:
-            EEPROM.put(addr, inputs[i].analog.pin);
+            eeprom_put(addr, inputs[i].analog.pin);
             addr += sizeof(uint8_t);
-            EEPROM.put(addr, inputs[i].analog.sensitivity);
+            eeprom_put(addr, inputs[i].analog.sensitivity);
             addr += sizeof(uint8_t);
             break;
 
         case Protocol::INPUT_TYPE_BUTTON:
-            EEPROM.put(addr, inputs[i].button.pin);
+            eeprom_put(addr, inputs[i].button.pin);
             addr += sizeof(uint8_t);
-            EEPROM.put(addr, inputs[i].button.debounce);
+            eeprom_put(addr, inputs[i].button.debounce);
             addr += sizeof(uint8_t);
             break;
 
         case Protocol::INPUT_TYPE_MATRIX: {
-            EEPROM.put(addr, inputs[i].matrix.num_row_pins);
+            eeprom_put(addr, inputs[i].matrix.num_row_pins);
             addr += sizeof(uint8_t);
-            EEPROM.put(addr, inputs[i].matrix.num_col_pins);
+            eeprom_put(addr, inputs[i].matrix.num_col_pins);
             addr += sizeof(uint8_t);
             uint8_t total_pins = inputs[i].matrix.num_row_pins + inputs[i].matrix.num_col_pins;
             for (uint8_t p = 0; p < total_pins; p++) {
-                EEPROM.put(addr, inputs[i].matrix.pins[p]);
+                eeprom_put(addr, inputs[i].matrix.pins[p]);
                 addr += sizeof(uint8_t);
             }
             break;
         }
         }
     }
+
+    // Commit changes for platforms that require it
+    eeprom_commit();
 }
 
 bool loadFromEEPROM()
 {
     // Read and verify magic number
     uint32_t magic;
-    EEPROM.get(EEPROM_MAGIC_ADDR, magic);
+    eeprom_get(EEPROM_MAGIC_ADDR, magic);
     if (magic != EEPROM_MAGIC) {
         return false; // No valid configuration
     }
 
     // Read and verify EEPROM format version
     uint8_t stored_version;
-    EEPROM.get(EEPROM_VERSION_ADDR, stored_version);
+    eeprom_get(EEPROM_VERSION_ADDR, stored_version);
     if (stored_version != EEPROM_FORMAT_VERSION) {
         // Version mismatch - clear EEPROM to invalidate old config
         // This prevents loading incompatible configurations after firmware updates
         uint32_t zero = 0;
-        EEPROM.put(EEPROM_MAGIC_ADDR, zero);
+        eeprom_put(EEPROM_MAGIC_ADDR, zero);
+        eeprom_commit();
         return false;
     }
 
     // Read config_id
-    EEPROM.get(EEPROM_CONFIG_ID_ADDR, g_current_config_id);
+    eeprom_get(EEPROM_CONFIG_ID_ADDR, g_current_config_id);
 
     // Read number of inputs
-    EEPROM.get(EEPROM_NUM_INPUTS_ADDR, g_current_num_inputs);
+    eeprom_get(EEPROM_NUM_INPUTS_ADDR, g_current_num_inputs);
 
     // Validate number of inputs
     if (g_current_num_inputs == 0 || g_current_num_inputs > MAX_INPUTS) {
@@ -176,35 +228,35 @@ bool loadFromEEPROM()
     // Read input configurations (variable size based on type)
     int addr = EEPROM_INPUTS_ADDR;
     for (uint8_t i = 0; i < g_current_num_inputs; i++) {
-        EEPROM.get(addr, g_current_inputs[i].input_type);
+        eeprom_get(addr, g_current_inputs[i].input_type);
         addr += sizeof(uint8_t);
 
         switch (g_current_inputs[i].input_type) {
         case Protocol::INPUT_TYPE_ANALOG:
-            EEPROM.get(addr, g_current_inputs[i].analog.pin);
+            eeprom_get(addr, g_current_inputs[i].analog.pin);
             addr += sizeof(uint8_t);
-            EEPROM.get(addr, g_current_inputs[i].analog.sensitivity);
+            eeprom_get(addr, g_current_inputs[i].analog.sensitivity);
             addr += sizeof(uint8_t);
             break;
 
         case Protocol::INPUT_TYPE_BUTTON:
-            EEPROM.get(addr, g_current_inputs[i].button.pin);
+            eeprom_get(addr, g_current_inputs[i].button.pin);
             addr += sizeof(uint8_t);
-            EEPROM.get(addr, g_current_inputs[i].button.debounce);
+            eeprom_get(addr, g_current_inputs[i].button.debounce);
             addr += sizeof(uint8_t);
             break;
 
         case Protocol::INPUT_TYPE_MATRIX: {
-            EEPROM.get(addr, g_current_inputs[i].matrix.num_row_pins);
+            eeprom_get(addr, g_current_inputs[i].matrix.num_row_pins);
             addr += sizeof(uint8_t);
-            EEPROM.get(addr, g_current_inputs[i].matrix.num_col_pins);
+            eeprom_get(addr, g_current_inputs[i].matrix.num_col_pins);
             addr += sizeof(uint8_t);
             uint8_t total_pins = g_current_inputs[i].matrix.num_row_pins + g_current_inputs[i].matrix.num_col_pins;
             if (total_pins > MAX_MATRIX_PINS) {
                 return false; // Invalid matrix config
             }
             for (uint8_t p = 0; p < total_pins; p++) {
-                EEPROM.get(addr, g_current_inputs[i].matrix.pins[p]);
+                eeprom_get(addr, g_current_inputs[i].matrix.pins[p]);
                 addr += sizeof(uint8_t);
             }
             break;
