@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-01-31
+
+### Added
+
+- **Release manifest uploadConfig**: Added upload configuration to release.json manifest
+  - Includes upload protocol, MCU identifier, baud rate, and 1200bps touch requirement
+  - Enables flashing applications to automatically configure upload parameters
+  - Updated RELEASE_MANIFEST.md documentation with uploadConfig schema
+
 ## [2.2.0] - 2026-01-17
 
 ### Added
