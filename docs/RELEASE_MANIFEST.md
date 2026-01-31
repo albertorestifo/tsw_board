@@ -14,7 +14,13 @@ Each GitHub release includes a `release.json` file that provides metadata about 
       "environment": "string",
       "name": "string",
       "displayName": "string",
-      "firmwareFile": "string"
+      "firmwareFile": "string",
+      "uploadConfig": {
+        "protocol": "string",
+        "mcu": "string",
+        "speed": "number",
+        "requires1200bpsTouch": "boolean"
+      }
     }
   ]
 }
@@ -39,6 +45,16 @@ Each GitHub release includes a `release.json` file that provides metadata about 
 | `name` | string | Short identifier for the device (used in firmware filename) |
 | `displayName` | string | Human-readable device name for display in UI |
 | `firmwareFile` | string | Filename of the firmware binary in the release assets |
+| `uploadConfig` | object | Upload configuration for flashing the device |
+
+### Upload Config Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `protocol` | string | Upload protocol (e.g., "avr109", "arduino", "wiring", "sam-ba", "esptool") |
+| `mcu` | string | Microcontroller unit identifier (e.g., "atmega32u4", "atmega328p", "esp32") |
+| `speed` | number | Baud rate for upload (e.g., 57600, 115200, 921600) |
+| `requires1200bpsTouch` | boolean | Whether the device requires a 1200bps touch on the serial port to enter bootloader mode |
 
 ## Example
 
@@ -52,19 +68,37 @@ Each GitHub release includes a `release.json` file that provides metadata about 
       "environment": "sparkfun_promicro16",
       "name": "sparkfun-pro-micro",
       "displayName": "SparkFun Pro Micro",
-      "firmwareFile": "trenino-sparkfun-pro-micro.firmware.hex"
+      "firmwareFile": "trenino-sparkfun-pro-micro.firmware.hex",
+      "uploadConfig": {
+        "protocol": "avr109",
+        "mcu": "atmega32u4",
+        "speed": 57600,
+        "requires1200bpsTouch": true
+      }
     },
     {
       "environment": "leonardo",
       "name": "arduino-leonardo",
       "displayName": "Arduino Leonardo",
-      "firmwareFile": "trenino-arduino-leonardo.firmware.hex"
+      "firmwareFile": "trenino-arduino-leonardo.firmware.hex",
+      "uploadConfig": {
+        "protocol": "avr109",
+        "mcu": "atmega32u4",
+        "speed": 57600,
+        "requires1200bpsTouch": true
+      }
     },
     {
       "environment": "esp32dev",
       "name": "esp32",
       "displayName": "ESP32 DevKit",
-      "firmwareFile": "trenino-esp32.firmware.bin"
+      "firmwareFile": "trenino-esp32.firmware.bin",
+      "uploadConfig": {
+        "protocol": "esptool",
+        "mcu": "esp32",
+        "speed": 921600,
+        "requires1200bpsTouch": false
+      }
     }
   ]
 }
@@ -90,6 +124,11 @@ Applications can fetch the release manifest to:
 1. Display a list of supported devices to the user
 2. Download the appropriate firmware file based on user selection
 3. Determine the correct flashing method based on file extension (`.hex` for AVR boards, `.bin` for ARM/ESP32 boards)
+4. Configure upload parameters using the `uploadConfig` object:
+   - Use the correct upload protocol for the device
+   - Set the appropriate baud rate for flashing
+   - Handle 1200bps touch requirement for native USB boards (ATmega32U4 and Arduino Due)
+   - Identify the target MCU for proper flashing tool selection
 
 ### Fetching the Manifest
 

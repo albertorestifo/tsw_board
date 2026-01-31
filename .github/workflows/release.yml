@@ -15,34 +15,66 @@ jobs:
             name: sparkfun-pro-micro
             display_name: SparkFun Pro Micro
             extension: hex
+            upload_protocol: avr109
+            mcu: atmega32u4
+            upload_speed: 57600
+            requires_1200bps_touch: true
           - environment: leonardo
             name: arduino-leonardo
             display_name: Arduino Leonardo
             extension: hex
+            upload_protocol: avr109
+            mcu: atmega32u4
+            upload_speed: 57600
+            requires_1200bps_touch: true
           - environment: micro
             name: arduino-micro
             display_name: Arduino Micro
             extension: hex
+            upload_protocol: avr109
+            mcu: atmega32u4
+            upload_speed: 57600
+            requires_1200bps_touch: true
           - environment: uno
             name: arduino-uno
             display_name: Arduino Uno
             extension: hex
+            upload_protocol: arduino
+            mcu: atmega328p
+            upload_speed: 115200
+            requires_1200bps_touch: false
           - environment: nanoatmega328new
             name: arduino-nano
             display_name: Arduino Nano
             extension: hex
+            upload_protocol: arduino
+            mcu: atmega328p
+            upload_speed: 115200
+            requires_1200bps_touch: false
           - environment: megaatmega2560
             name: arduino-mega-2560
             display_name: Arduino Mega 2560
             extension: hex
+            upload_protocol: wiring
+            mcu: atmega2560
+            upload_speed: 115200
+            requires_1200bps_touch: false
           - environment: due
             name: arduino-due
             display_name: Arduino Due
             extension: bin
+            upload_protocol: sam-ba
+            mcu: at91sam3x8e
+            upload_speed: 115200
+            requires_1200bps_touch: true
           - environment: esp32dev
             name: esp32
             display_name: ESP32 DevKit
             extension: bin
+            upload_protocol: esptool
+            mcu: esp32
+            upload_speed: 921600
+            requires_1200bps_touch: false
     steps:
       - uses: actions/checkout@v4
 
@@ -64,12 +96,20 @@ jobs:
 
       - name: Create device info JSON
         run: |
-          printf '{\n  "environment": "%s",\n  "name": "%s",\n  "displayName": "%s",\n  "firmwareFile": "%s"\n}\n' \
-            "${{ matrix.environment }}" \
-            "${{ matrix.name }}" \
-            "${{ matrix.display_name }}" \
-            "trenino-${{ matrix.name }}.firmware.${{ matrix.extension }}" \
-            > release/${{ matrix.name }}.json
+          cat > release/${{ matrix.name }}.json << EOF
+          {
+            "environment": "${{ matrix.environment }}",
+            "name": "${{ matrix.name }}",
+            "displayName": "${{ matrix.display_name }}",
+            "firmwareFile": "trenino-${{ matrix.name }}.firmware.${{ matrix.extension }}",
+            "uploadConfig": {
+              "protocol": "${{ matrix.upload_protocol }}",
+              "mcu": "${{ matrix.mcu }}",
+              "speed": ${{ matrix.upload_speed }},
+              "requires1200bpsTouch": ${{ matrix.requires_1200bps_touch }}
+            }
+          }
+          EOF
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
